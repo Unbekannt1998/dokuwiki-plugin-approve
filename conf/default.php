@@ -4,6 +4,7 @@ $conf['no_apr_namespaces'] = '';
 $conf['no_apr_groups'] = '';
 $conf['prettyprint'] = 0;
 $conf['ready_for_approval'] = 0;
+$conf['self_approve'] = 1;
 
 $conf['sum approved'] = 'Approved';
 $conf['sum ready for approval'] = 'Ready for approval';

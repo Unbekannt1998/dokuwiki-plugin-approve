@@ -399,7 +399,6 @@ class action_plugin_approve_approve extends DokuWiki_Action_Plugin {
 
         $id = $event->data['id'];
         $does_not_need_approval = $helper->is_user_auto_approve($sqlite) && $helper->client_can_approve($id, $INFO['client']);
-        msg($does_not_need_approval);
         switch ($changeType) {
             case DOKU_CHANGE_TYPE_EDIT:
             case DOKU_CHANGE_TYPE_REVERT:
