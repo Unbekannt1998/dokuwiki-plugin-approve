@@ -197,6 +197,7 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         global $INFO;
         //user not log in
         if (!isset($INFO['userinfo'])) return false;
+        if (!$this->isNotSelfApprove($id)) return false;
 
         if ($pageApprover == $INFO['client']) {
             return true;
@@ -204,8 +205,7 @@ class helper_plugin_approve extends DokuWiki_Plugin {
             return true;
         //no approver provided, check if approve plugin apply here
         } elseif (auth_quickaclcheck($id) >= AUTH_DELETE &&
-            (!$pageApprover || !$this->getConf('strict_approver')) &&
-            $this->isNotSelfApprove($id)) {
+            (!$pageApprover || !$this->getConf('strict_approver'))) {
             return true;
         }
 
