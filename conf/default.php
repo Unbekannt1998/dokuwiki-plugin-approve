@@ -2,6 +2,7 @@
 $conf['apr_namespaces'] = '';
 $conf['no_apr_namespaces'] = '';
 $conf['no_apr_groups'] = '';
+$conf['allow_self_approve'] = '';
 $conf['prettyprint'] = 0;
 $conf['ready_for_approval'] = 0;
 $conf['self_approve'] = 1;

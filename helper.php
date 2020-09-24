@@ -225,7 +225,34 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         }
         $res = $sqlite->query("SELECT  approved_by from revision WHERE page = ? ORDER by version DESC LIMIT 1", $id);
         $name = $sqlite->res2single($res);
-        return $INFO['client'] != $name;
+        return $INFO['client'] != $name || $this->can_self_approve($sqlite, $INFO['client']);
+    }
+    
+    public function can_self_approve(helper_plugin_sqlite $sqlite, $username){
+        global $INFO;
+        $group_list = $this->get_exept_list($sqlite);
+        foreach ($group_list as $group ){
+            $sign = substr($group, 0, 1);
+            if($sign == "@"){
+                $group = substr($group, 1);
+                return in_array($group, $INFO['userinfo']['grps']);
+            }
+            else{
+                return $group == $INFO['client'];
+            }
+        }
+        return false;
+    }
+    
+    public function get_exept_list(helper_plugin_sqlite $sqlite){
+        $no_apr_groups = $this->get_config_value($sqlite, 'allow_self_approve');
+        $no_apr_groups_list = preg_split('/\s+/', $no_apr_groups,-1,
+            PREG_SPLIT_NO_EMPTY);
+        $no_apr_groups_list = array_map(function ($namespace) {
+            return ltrim($namespace, ':');
+        }, $no_apr_groups_list);
+            
+            return $no_apr_groups_list;
     }
     
     /**
@@ -269,6 +296,10 @@ class helper_plugin_approve extends DokuWiki_Plugin {
     
     public function no_apr_groups(helper_plugin_sqlite $sqlite) {
         $key = "no_apr_groups";
+        return $this->get_config_value($sqlite, $key);
+    }
+    
+    public function get_config_value(helper_plugin_sqlite $sqlite, $key){
         $res = $sqlite->query('SELECT value FROM config WHERE key = ?', $key);
         $no_apr_groups_db = $sqlite->res2single($res);
         $no_apr_groups_conf = $this->getConf($key);
