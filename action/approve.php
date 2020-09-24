@@ -422,7 +422,7 @@ class action_plugin_approve_approve extends DokuWiki_Action_Plugin {
                         'rev' => $last_change_date,
                         'approved' => date('c'),
                         'approved_by' => $INFO['client'],
-                        'version' => 1,
+                        'version' => $next_version,
                         'current' => 1
                     ]);
 

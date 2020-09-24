@@ -204,13 +204,30 @@ class helper_plugin_approve extends DokuWiki_Plugin {
             return true;
         //no approver provided, check if approve plugin apply here
         } elseif (auth_quickaclcheck($id) >= AUTH_DELETE &&
-            (!$pageApprover || !$this->getConf('strict_approver'))) {
+            (!$pageApprover || !$this->getConf('strict_approver')) &&
+            $this->isNotSelfApprove($id)) {
             return true;
         }
 
         return false;
     }
 
+    public function isNotSelfApprove($id){
+        global $INFO;
+        if($this->getConf('self_approve')) return true;
+        try {
+            /** @var \helper_plugin_approve_db $db_helper */
+            $db_helper = plugin_load('helper', 'approve_db');
+            $sqlite = $db_helper->getDB();
+        } catch (Exception $e) {
+            msg($e->getMessage(), -1);
+            return false;
+        }
+        $res = $sqlite->query("SELECT  approved_by from revision WHERE page = ? ORDER by version DESC LIMIT 1", $id);
+        $name = $sqlite->res2single($res);
+        return $INFO['client'] != $name;
+    }
+    
     /**
      * @return boolean if user does not need to approved
      */
@@ -225,8 +242,13 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         global $INFO;
         $group_list = $this->get_auto_approve_list($sqlite, $no_apr_groups);
         foreach ($group_list as $group ){
-            if (in_array($group, $INFO['userinfo']['grps']) || $group == $INFO['client']){
-                return true;
+            $sign = substr($group, 0, 1);
+            if($sign == "@"){
+                $group = substr($group, 1);
+                return in_array($group, $INFO['userinfo']['grps']);
+            }
+            else{
+                return $group == $INFO['client'];
             }
         }
         return false;
