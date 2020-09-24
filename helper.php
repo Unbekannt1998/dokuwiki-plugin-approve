@@ -34,7 +34,7 @@ class helper_plugin_approve extends DokuWiki_Plugin {
 
         return $no_apr_namespaces_conf;
     }
-
+    
     /**
      * @param helper_plugin_sqlite $sqlite
      * @param $id
@@ -211,6 +211,54 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         return false;
     }
 
+    /**
+     * @return boolean if user does not need to approved
+     */
+    public function is_user_auto_approve(helper_plugin_sqlite $sqlite){
+        global $INFO;
+        
+        if(!isset($INFO['userinfo'])) return false;
+        return $this->in_auto_approve_list($sqlite);
+    }
+    
+    public function in_auto_approve_list(helper_plugin_sqlite $sqlite, $no_apr_groups=null) {
+        global $INFO;
+        $group_list = $this->get_auto_approve_list($sqlite, $no_apr_groups);
+        foreach ($group_list as $group ){
+            if (in_array($group, $INFO['userinfo']['grps']) || $group == $INFO['client']){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public function get_auto_approve_list(helper_plugin_sqlite $sqlite, $no_apr_groups=null) {
+        if(!$no_apr_groups){
+            $no_apr_groups = $this->no_apr_groups($sqlite);
+        }
+        $no_apr_groups_list = preg_split('/\s+/', $no_apr_groups,-1,
+            PREG_SPLIT_NO_EMPTY);
+        $no_apr_groups_list = array_map(function ($namespace) {
+            return ltrim($namespace, ':');
+        }, $no_apr_groups_list);
+            
+            return $no_apr_groups_list;
+    }
+    
+    public function no_apr_groups(helper_plugin_sqlite $sqlite) {
+        $key = "no_apr_groups";
+        $res = $sqlite->query('SELECT value FROM config WHERE key = ?', $key);
+        $no_apr_groups_db = $sqlite->res2single($res);
+        $no_apr_groups_conf = $this->getConf($key);
+        
+        if ($no_apr_namespaces_db != $no_apr_namespaces_conf) {
+            $sqlite->query('UPDATE config SET value=? WHERE key=?', $no_apr_namespaces_conf, $key);
+        }
+        
+        return $no_apr_groups_conf;
+    }
+    
+    
     /**
      * @param $id
      * @return bool
