@@ -373,6 +373,7 @@ class action_plugin_approve_approve extends DokuWiki_Action_Plugin {
      * @return void
      */
     public function handle_pagesave_after(Doku_Event $event) {
+        global $INFO;
         try {
             /** @var \helper_plugin_approve_db $db_helper */
             $db_helper = plugin_load('helper', 'approve_db');
@@ -397,12 +398,38 @@ class action_plugin_approve_approve extends DokuWiki_Action_Plugin {
         }
 
         $id = $event->data['id'];
+        $does_not_need_approval = $helper->is_user_auto_approve($sqlite) && $helper->client_can_approve($id, $INFO['client']);
+        msg($does_not_need_approval);
         switch ($changeType) {
             case DOKU_CHANGE_TYPE_EDIT:
             case DOKU_CHANGE_TYPE_REVERT:
             case DOKU_CHANGE_TYPE_MINOR_EDIT:
                 $last_change_date = $event->data['newRevision'];
 
+                if($does_not_need_approval){
+                    $res = $sqlite->query('SELECT MAX(version)+1 FROM revision
+                                        WHERE page=?', $INFO['id']);
+                    $next_version = $sqlite->res2single($res);
+                    if (!$next_version) {
+                        $next_version = 1;
+                    }
+                    
+                    $sqlite->query('UPDATE revision SET current=0
+                                            WHERE page=?
+                                            AND current=1', $id);
+
+                    $sqlite->storeEntry('revision', [
+                        'page' => $id,
+                        'rev' => $last_change_date,
+                        'approved' => date('c'),
+                        'approved_by' => $INFO['client'],
+                        'version' => 1,
+                        'current' => 1
+                    ]);
+
+                    break;
+                }
+                
                 //if the current page has approved or ready_for_approval -- keep it
                 $rev = $this->lastRevisionHasntApprovalData($id);
                 if ($rev) {
@@ -447,13 +474,25 @@ class action_plugin_approve_approve extends DokuWiki_Action_Plugin {
                     $sqlite->storeEntry('page', $data);
                 }
 
+                
                 //store revision
                 $last_change_date = $event->data['newRevision'];
-                $sqlite->storeEntry('revision', [
-                    'page' => $id,
-                    'rev' => $last_change_date,
-                    'current' => 1
-                ]);
+                if ($does_not_need_approval) {
+                    $sqlite->storedata('revision', [
+                        'page' => $id,
+                        'rev' => $last_change_date,
+                        'approved' => date('c'),
+                        'approved_by' => $INFO['client'],
+                        'version' => 1,
+                        'current' => 1
+                    ]);
+                }else{
+                    $sqlite->storeEntry('revision', [
+                        'page' => $id,
+                        'rev' => $last_change_date,
+                        'current' => 1
+                    ]);
+                }
                 break;
         }
     }
