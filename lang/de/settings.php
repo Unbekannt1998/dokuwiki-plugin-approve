@@ -1,5 +1,7 @@
 <?php
 $lang['no_apr_namespaces'] = 'Namensräume, wo dieses Plugin <strong>NICHT</strong> gelten soll (mehrere mit Leerzeichen separieren)';
+$lang['no_apr_groups'] = 'Gruppen oder Benutzer die keine Freigabe brauchen (space separated list)';
+$lang['self_approve'] = 'Erlaube selbst Freigabe';
 $lang['prettyprint'] = 'Ausdruck mit schöner Überschrift';
 $lang['ready_for_approval'] = 'Zwischenstatus "Fertig zur Freigabe" aktivieren.';
 $lang['strict_approver'] = 'Nur Freigabeberechtigte können ihre Seiten freigeben (ausschließlich).';

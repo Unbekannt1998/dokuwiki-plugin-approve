@@ -1,5 +1,7 @@
 <?php
 $lang['no_apr_namespaces'] = 'Namespaces che questo plugin <strong>non</strong> si applica (lista separata da spazi).';
+$lang['no_apr_groups'] =  'gruppi o utenti a cui non serve nessun permesso (lista separata da spazi)';
+$lang['self_approve'] = 'ammetti/o autoapprovazione';
 $lang['prettyprint'] = 'Una intestazione bella.';
 $lang['ready_for_approval'] = 'Abilita stato intermedio "Imposta pronto per approvazione" per rendere noto al reviewer che è stato verificato/approvato';
 $lang['strict_approver'] = 'Solo gli approvers possono approvare le pagine.';
