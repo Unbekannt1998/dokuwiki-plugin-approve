@@ -223,8 +223,9 @@ class helper_plugin_approve extends DokuWiki_Plugin {
             msg($e->getMessage(), -1);
             return false;
         }
-        $res = $sqlite->query("SELECT  approved_by from revision WHERE page = ? ORDER by version DESC LIMIT 1", $id);
-        $name = $sqlite->res2single($res);
+
+        $name = $INFO['user'];
+
         return $INFO['client'] != $name || $this->can_self_approve($sqlite, $INFO['client']);
     }
     
