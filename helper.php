@@ -327,10 +327,8 @@ class helper_plugin_approve extends DokuWiki_Plugin {
      */
     public function client_can_see_drafts($id, $pageApprover) {
         if (!$this->getConf('hide_drafts_for_viewers')) return true;
-
         if (auth_quickaclcheck($id) >= AUTH_EDIT) return true;
         if ($this->client_can_approve($id, $pageApprover)) return true;
-
         return false;
     }
 
@@ -378,5 +376,59 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         if(!$keeptxt) $id = preg_replace('#\.txt$#','',$id);
         $id = trim($id, ':');
         return $id;
+    }
+    
+    public function setApproveMessage($discordHelper) {
+        $lang = $this->getLang('discord_approve');
+        $title = $this->getLang('discord_approve_title');
+        $payload = $this->setCommonApproveMessage($discordHelper, $lang, $title);
+        $payload['embeds']['0']['color'] = hexdec ('cfc');
+        $discordHelper->setPayload($payload);;
+    }
+    
+    public function setReadyForApproveMessage(helper_plugin_discordnotifier $discordHelper) {
+        $lang = $this->getLang('discord_mark_as_ready');
+        $title = $this->getLang('discord_mark_as_ready_title');
+        $payload = $this->setCommonApproveMessage($discordHelper, $lang, $title);
+        $payload['embeds']['0']['color'] = hexdec ('ccf');
+        $discordHelper->setPayload($payload);
+    }
+    
+    
+    public function setCommonApproveMessage(helper_plugin_discordnotifier $discordHelper, $event_name, $title) {
+        global $lang;
+        global $conf;
+        global $INFO;
+        $embed_color = hexdec ( "37474f" ); // default value 
+        $user = $INFO['userinfo']['name'];
+        $page = $INFO['id'];
+        $link = '';
+        switch ( $conf['userewrite'] ) {
+            case 0:
+                $link = DOKU_URL . "doku.php?id={$page}";
+                break;
+            case 1:
+                $link = DOKU_URL . $page;
+                break;
+            case 2:
+                $link = DOKU_URL . "doku.php/{$page}";
+                break;
+        }
+        
+        $description = "{$user} {$event_name} [__{$page}__]({$link})";
+        
+        
+        $summary = $INFO['sum'];
+        if ($this -> getConf ( 'notify_show_summary' ) ) {
+            if ( $summary ) $description .= "\n" . $lang['summary'] . ": " . $summary;
+        }
+        
+        $footer = array ( "text" => "Dokuwiki DiscordNotifier v1.0.3" );
+        $payload = array ( "embeds" =>
+            array (
+                ["title" => $title, "color" => $embed_color, "description" => $description, "footer" => $footer]
+            ),
+        );
+        return $payload;
     }
 }

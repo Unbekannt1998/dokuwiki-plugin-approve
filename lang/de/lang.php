@@ -31,3 +31,8 @@ $lang['admin h_assignment_namespace'] = 'Seite/Namensraum';
 $lang['admin h_assignment_approver'] = $lang['approver'];
 
 $lang['notification full'] = 'Sie können folgende Seite freigeben: %s';
+
+$lang['discord_mark_as_ready_title'] = 'Seite bereit für die Freigabe';
+$lang['discord_mark_as_ready'] = 'hat die Seite als bereit für die Freigabe makiert';
+$lanf['discord_approve'] = 'hat eine Seite freigegeben';
+$lang['discord_approve_title'] = 'Eine Seite wurde freigegeben';

@@ -1,8 +1,10 @@
 <?php
 $conf['apr_namespaces'] = '';
+$conf['use_discord_notify'] = 1;
 $conf['no_apr_namespaces'] = '';
 $conf['no_apr_groups'] = '';
 $conf['allow_self_approve'] = '';
+$conf['use_discord_notify'] = 1;
 $conf['prettyprint'] = 0;
 $conf['ready_for_approval'] = 0;
 $conf['self_approve'] = 1;
