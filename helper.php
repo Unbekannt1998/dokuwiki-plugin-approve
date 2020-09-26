@@ -367,11 +367,8 @@ class helper_plugin_approve extends DokuWiki_Plugin {
      */
     public function client_can_see_drafts($id, $pageApprover) {
         if (!$this->getConf('hide_drafts_for_viewers')) return true;
-        msg("conf");
         if (auth_quickaclcheck($id) >= AUTH_EDIT) return true;
-        msg("auth");
         if ($this->client_can_approve($id, $pageApprover)) return true;
-        msg("approve");
         return false;
     }
 
@@ -426,7 +423,6 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         $title = $this->getLang('discord_approve_title');
         $payload = $this->setCommonApproveMessage($discordHelper, $lang, $title);
         $payload['embeds']['0']['color'] = hexdec ('cfc');
-        //die(print_r($payload));
         $discordHelper->setPayload($payload);;
     }
     
@@ -435,7 +431,6 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         $title = $this->getLang('discord_mark_as_ready_title');
         $payload = $this->setCommonApproveMessage($discordHelper, $lang, $title);
         $payload['embeds']['0']['color'] = hexdec ('ccf');
-        //die(print_r($payload));
         $discordHelper->setPayload($payload);
     }
     
