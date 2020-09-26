@@ -212,6 +212,11 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         return false;
     }
 
+    /**
+     * can the user self approve the site
+     * @param unknown $id
+     * @return boolean
+     */
     public function isNotSelfApprove($id){
         global $INFO;
         if($this->getConf('self_approve')) return true;
@@ -229,6 +234,12 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         return $INFO['client'] != $name || $this->can_self_approve($sqlite, $INFO['client']);
     }
     
+    /**
+     * check if the user can self approve
+     * @param helper_plugin_sqlite $sqlite
+     * @param unknown $username
+     * @return boolean
+     */
     public function can_self_approve(helper_plugin_sqlite $sqlite, $username){
         global $INFO;
         $group_list = $this->get_exept_list($sqlite);
@@ -245,6 +256,11 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         return false;
     }
     
+    /**
+     * get the list of exeptet users and Groups that still can auto approve
+     * @param helper_plugin_sqlite $sqlite
+     * @return array
+     */
     public function get_exept_list(helper_plugin_sqlite $sqlite){
         $no_apr_groups = $this->get_config_value($sqlite, 'allow_self_approve');
         $no_apr_groups_list = preg_split('/\s+/', $no_apr_groups,-1,
@@ -257,7 +273,7 @@ class helper_plugin_approve extends DokuWiki_Plugin {
     }
     
     /**
-     * @return boolean if user does not need to approved
+     * @return boolean if user does not need to be approved
      */
     public function is_user_auto_approve(helper_plugin_sqlite $sqlite){
         global $INFO;
@@ -266,6 +282,12 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         return $this->in_auto_approve_list($sqlite);
     }
     
+    /**
+     * is the logged in user in the auto approve list group or user
+     * @param helper_plugin_sqlite $sqlite
+     * @param unknown $no_apr_groups
+     * @return boolean
+     */
     public function in_auto_approve_list(helper_plugin_sqlite $sqlite, $no_apr_groups=null) {
         global $INFO;
         $group_list = $this->get_auto_approve_list($sqlite, $no_apr_groups);
@@ -282,6 +304,12 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         return false;
     }
     
+    /**
+     * get the List of groups and people that do not need approval
+     * @param helper_plugin_sqlite $sqlite
+     * @param unknown $no_apr_groups
+     * @return array
+     */
     public function get_auto_approve_list(helper_plugin_sqlite $sqlite, $no_apr_groups=null) {
         if(!$no_apr_groups){
             $no_apr_groups = $this->no_apr_groups($sqlite);
@@ -295,11 +323,23 @@ class helper_plugin_approve extends DokuWiki_Plugin {
             return $no_apr_groups_list;
     }
     
+    
+    /**
+     * get the config Value for the Key no_apr_groups that is used for the check if the user need approval
+     * @param helper_plugin_sqlite $sqlite
+     * @return unknown
+     */
     public function no_apr_groups(helper_plugin_sqlite $sqlite) {
         $key = "no_apr_groups";
         return $this->get_config_value($sqlite, $key);
     }
     
+    /**
+     * get the Config Value for the given key
+     * @param helper_plugin_sqlite $sqlite
+     * @param unknown $key
+     * @return unknown
+     */
     public function get_config_value(helper_plugin_sqlite $sqlite, $key){
         $res = $sqlite->query('SELECT value FROM config WHERE key = ?', $key);
         $no_apr_groups_db = $sqlite->res2single($res);
@@ -327,10 +367,11 @@ class helper_plugin_approve extends DokuWiki_Plugin {
      */
     public function client_can_see_drafts($id, $pageApprover) {
         if (!$this->getConf('hide_drafts_for_viewers')) return true;
-
+        msg("conf");
         if (auth_quickaclcheck($id) >= AUTH_EDIT) return true;
+        msg("auth");
         if ($this->client_can_approve($id, $pageApprover)) return true;
-
+        msg("approve");
         return false;
     }
 
@@ -378,5 +419,61 @@ class helper_plugin_approve extends DokuWiki_Plugin {
         if(!$keeptxt) $id = preg_replace('#\.txt$#','',$id);
         $id = trim($id, ':');
         return $id;
+    }
+    
+    public function setApproveMessage($discordHelper) {
+        $lang = $this->getLang('discord_approve');
+        $title = $this->getLang('discord_approve_title');
+        $payload = $this->setCommonApproveMessage($discordHelper, $lang, $title);
+        $payload['embeds']['0']['color'] = hexdec ('cfc');
+        //die(print_r($payload));
+        $discordHelper->setPayload($payload);;
+    }
+    
+    public function setReadyForApproveMessage(helper_plugin_discordnotifier $discordHelper) {
+        $lang = $this->getLang('discord_mark_as_ready');
+        $title = $this->getLang('discord_mark_as_ready_title');
+        $payload = $this->setCommonApproveMessage($discordHelper, $lang, $title);
+        $payload['embeds']['0']['color'] = hexdec ('ccf');
+        //die(print_r($payload));
+        $discordHelper->setPayload($payload);
+    }
+    
+    
+    public function setCommonApproveMessage(helper_plugin_discordnotifier $discordHelper, $event_name, $title) {
+        global $lang;
+        global $conf;
+        global $INFO;
+        $embed_color = hexdec ( "37474f" ); // default value 
+        $user = $INFO['userinfo']['name'];
+        $page = $INFO['id'];
+        $link = '';
+        switch ( $conf['userewrite'] ) {
+            case 0:
+                $link = DOKU_URL . "doku.php?id={$page}";
+                break;
+            case 1:
+                $link = DOKU_URL . $page;
+                break;
+            case 2:
+                $link = DOKU_URL . "doku.php/{$page}";
+                break;
+        }
+        
+        $description = "{$user} {$event_name} [__{$page}__]({$link})";
+        
+        
+        $summary = $INFO['sum'];
+        if ($this -> getConf ( 'notify_show_summary' ) ) {
+            if ( $summary ) $description .= "\n" . $lang['summary'] . ": " . $summary;
+        }
+        
+        $footer = array ( "text" => "Dokuwiki DiscordNotifier v1.0.3" );
+        $payload = array ( "embeds" =>
+            array (
+                ["title" => $title, "color" => $embed_color, "description" => $description, "footer" => $footer]
+            ),
+        );
+        return $payload;
     }
 }

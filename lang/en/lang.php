@@ -34,3 +34,8 @@ $lang['admin h_assignment_approver'] = $lang['approver'];
 $lang['notification full'] = 'You have a page to approve: %s';
 
 $lang['js']['group_option_label'] = 'Group:';
+
+$lang['discord_mark_as_ready_title'] = 'Page ready for approval';
+$lang['discord_mark_as_ready'] = 'marked a page ready for approval';
+$lanf['discord_approve'] = 'approved a page';
+$lang['discord_approve_title'] = 'A Page was approved';

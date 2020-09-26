@@ -105,6 +105,14 @@ class action_plugin_approve_approve extends DokuWiki_Action_Plugin {
                         WHERE page=? AND current=1 AND approved IS NULL',
                         date('c'), $INFO['client'], $next_version, $INFO['id']);
 
+        if(!plugin_isdisabled('discordnotifier') && $this->getConf('use_discord_notify')){
+            $discordHelper = plugin_load('helper', 'discordnotifier');
+            if ($discordHelper->shouldBeSend($INFO['filepath'])){
+                $helper->setApproveMessage($discordHelper);
+                $discordHelper->submit_payload ( ) ;
+            }
+        }
+        
         header('Location: ' . wl($INFO['id']));
 	}
 
@@ -133,6 +141,14 @@ class action_plugin_approve_approve extends DokuWiki_Action_Plugin {
         $sqlite->query('UPDATE revision SET ready_for_approval=?, ready_for_approval_by=?
                                 WHERE page=? AND current=1 AND ready_for_approval IS NULL',
         date('c'), $INFO['client'], $INFO['id']);
+        
+        if(!plugin_isdisabled('discordnotifier') && $this->getConf('use_discord_notify')){
+            $discordHelper = plugin_load('helper', 'discordnotifier');
+            if ($discordHelper->shouldBeSend($INFO['filepath'])){
+                $helper->setReadyForApproveMessage($discordHelper);
+                $discordHelper->submit_payload ( ) ;
+            }
+        }
 
         header('Location: ' . wl($INFO['id']));
     }
@@ -169,7 +185,7 @@ class action_plugin_approve_approve extends DokuWiki_Action_Plugin {
         $last_change_date = @filemtime(wikiFN($INFO['id']));
         //current page is approved
         if ($last_approved_rev == $last_change_date) return;
-
+        
 	    header("Location: " . wl($INFO['id'], ['rev' => $last_approved_rev], false, '&'));
 	}
 
